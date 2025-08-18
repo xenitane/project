@@ -1,0 +1,61 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import cdnify from "@/lib/cdnify";
+import cn from "@/lib/cn";
+import formatDate from "@/lib/formatDate";
+import hashSlug from "@/lib/hashSlug";
+import { getCollection } from "astro:content";
+
+import "@fontsource/geist-mono";
+import "@/styles/pub.css";
+import { links } from "@/constants";
+
+export async function getStaticPaths() {
+    return (await getCollection("project")).map(function (publication) {
+        return {
+            params: { slug: hashSlug(publication.slug) },
+            props: publication,
+        };
+    });
+}
+
+const projects = Astro.props;
+const { Content } = await projects.render();
+const {
+    data: { metaContent, createdAt, version, techStack },
+} = projects;
+const { heroImage, title } = metaContent;
+---
+
+<BaseLayout {...metaContent} image={cdnify(heroImage)}>
+    <a class="w-fit" href={links.forNav.Projects}>&leftarrow;<span class="underline">All Projects</span></a>
+    <h1 class={cn("flex items-center text-xl font-bold", "md:text-2xl")}>
+        {title}<sup>{version}</sup>
+    </h1>
+
+    <div class="flex flex-wrap items-center gap-2">
+        <sapn>Build With:</sapn>
+        {
+            techStack.map(function (tech) {
+                return <span class={cn("rounded-full bg-neutral-200 px-2 py-1 text-sm", "dark:bg-neutral-800")}>{tech}</span>;
+            })
+        }
+    </div>
+    <span class="ml-auto min-w-fit text-nowrap">on {formatDate(createdAt)}</span>
+    <div
+        class={cn(
+            "mb-4 flex w-3/4 mx-auto aspect-video items-center justify-center overflow-hidden rounded-2xl border border-neutral-300",
+            "md:border-2",
+            "dark:border-neutral-700"
+        )}
+    >
+        <img
+            src={cdnify(heroImage)}
+            class="min-h-full min-w-full object-cover grayscale"
+            alt={`${title} - Project Hero Image`}
+        />
+    </div>
+    <div id="project-content">
+        <Content />
+    </div>
+</BaseLayout>
